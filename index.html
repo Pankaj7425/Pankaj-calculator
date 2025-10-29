@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pankaj Calculator</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .calculator-container {
+      width: 350px;
+      background: #222;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+    .display {
+      background: #000;
+      border-radius: 10px;
+      padding: 10px;
+      text-align: right;
+      margin-bottom: 10px;
+    }
+    #history-display {
+      font-size: 14px;
+      color: #aaa;
+      min-height: 20px;
+    }
+    #main-display {
+      font-size: 24px;
+      font-weight: bold;
+      min-height: 30px;
+    }
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    .calculator-button {
+      padding: 15px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      background: #333;
+      color: #fff;
+      cursor: pointer;
+      transition: 0.1s;
+    }
+    .calculator-button.active {
+      background: #666;
+    }
+    .btn-operator {
+      background: #ff9500;
+    }
+    .btn-equals {
+      background: #34c759;
+      grid-row: span 2;
+    }
+    .col-span-2 { grid-column: span 2; }
+    .hidden { display: none; }
+
+    /* Modal styling */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: #222;
+      padding: 20px;
+      border-radius: 10px;
+      width: 300px;
+      max-height: 80vh;
+      overflow-y: auto;
+      color: #fff;
+      position: relative;
+    }
+    .modal-close-btn {
+      position: absolute;
+      top: 5px; right: 10px;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 22px;
+      cursor: pointer;
+    }
+    .clear-history-btn {
+      background: #ff3b30;
+      border: none;
+      padding: 8px 10px;
+      border-radius: 8px;
+      color: #fff;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    /* Light theme */
+    .light-mode {
+      background-color: #f2f2f2;
+      color: #000;
+    }
+    .light-mode .calculator-container {
+      background: #fff;
+      color: #000;
+    }
+    .light-mode .calculator-button {
+      background: #eee;
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator-container">
+    <div class="display">
+      <div id="history-display"></div>
+      <div id="main-display">0</div>
+    </div>
+
+    <div class="button-grid">
+      <button class="calculator-button btn-function" data-value="sqrt">√</button>
+      <button class="calculator-button btn-function" data-value="square">x²</button>
+      <button class="calculator-button btn-function" data-value="cube">x³</button>
+      <button class="calculator-button btn-function" data-value="power">xʸ</button>
+      <button class="calculator-button btn-function" data-value="exp">eˣ</button>
+
+      <button class="calculator-button btn-function" data-value="ten_power">10ˣ</button>
+      <button class="calculator-button btn-function" data-value="pi">π</button>
+      <button class="calculator-button btn-function" data-value="e">e</button>
+      <button class="calculator-button btn-function" data-value="factorial">x!</button>
+      <button class="calculator-button btn-function" data-value="percent">%</button>
+      <button class="calculator-button btn-function" data-value="ft_to_cm">ft→cm</button>
+      <button class="calculator-button btn-function" data-value="history">History</button>
+      <button class="calculator-button btn-function" data-value="theme_toggle">Theme</button>
+    </div>
+
+    <div class="button-grid">
+      <button class="calculator-button btn-clear col-span-2" data-value="C">C</button>
+      <button class="calculator-button btn-operator" data-value="/">&div;</button>
+      <button class="calculator-button btn-operator" data-value="*">&times;</button>
+
+      <button class="calculator-button btn-number" data-value="7">7</button>
+      <button class="calculator-button btn-number" data-value="8">8</button>
+      <button class="calculator-button btn-number" data-value="9">9</button>
+      <button class="calculator-button btn-operator" data-value="-">-</button>
+
+      <button class="calculator-button btn-number" data-value="4">4</button>
+      <button class="calculator-button btn-number" data-value="5">5</button>
+      <button class="calculator-button btn-number" data-value="6">6</button>
+      <button class="calculator-button btn-operator" data-value="+">+</button>
+
+      <button class="calculator-button btn-number" data-value="1">1</button>
+      <button class="calculator-button btn-number" data-value="2">2</button>
+      <button class="calculator-button btn-number" data-value="3">3</button>
+      <button class="calculator-button btn-equals row-span-2" data-value="=">=</button>
+
+      <button class="calculator-button btn-number col-span-2" data-value="0">0</button>
+      <button class="calculator-button btn-number" data-value=".">.</button>
+    </div>
+  </div>
+
+  <!-- History Modal -->
+  <div id="historyModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <button class="modal-close-btn" id="closeHistoryModal">&times;</button>
+      <h2>Calculation History</h2>
+      <ul id="historyList"></ul>
+      <button class="clear-history-btn" id="clearHistoryBtn">Clear History</button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const historyDisplay = document.getElementById('history-display');
+      const mainDisplay = document.getElementById('main-display');
+      const buttons = document.querySelectorAll('.calculator-button');
+      const historyModal = document.getElementById('historyModal');
+      const closeHistoryModalBtn = document.getElementById('closeHistoryModal');
+      const historyList = document.getElementById('historyList');
+      const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+      const body = document.body;
+
+      let currentInput = '0';
+      let previousInput = '';
+      let operator = null;
+      let waitingForSecondOperand = false;
+      let calculationCompleted = false;
+      let calculationHistory = [];
+
+      const MAX_HISTORY_ITEMS = 5;
+      const THEME_STORAGE_KEY = 'calculatorTheme';
+
+      function updateDisplay() {
+        mainDisplay.textContent = currentInput;
+        if (calculationCompleted) return;
+        if (operator && previousInput !== '') {
+          historyDisplay.textContent = waitingForSecondOperand
+            ? `${previousInput} ${operator}`
+            : `${previousInput} ${operator} ${currentInput}`;
+        } else {
+          historyDisplay.textContent = '';
+        }
+      }
+
+      function clearAll() {
+        currentInput = '0';
+        previousInput = '';
+        operator = null;
+        waitingForSecondOperand = false;
+        calculationCompleted = false;
+        historyDisplay.textContent = '';
+        mainDisplay.textContent = '0';
+      }
+
+      function addCalculationToHistory(expression, result) {
+        calculationHistory.push(`${expression} = ${result}`);
+        if (calculationHistory.length > MAX_HISTORY_ITEMS) calculationHistory.shift();
+      }
+
+      function appendNumber(number) {
+        if (calculationCompleted) {
+          currentInput = number;
+          previousInput = '';
+          operator = null;
+          waitingForSecondOperand = false;
+          calculationCompleted = false;
+          historyDisplay.textContent = '';
+        } else if (waitingForSecondOperand) {
+          currentInput = number;
+          waitingForSecondOperand = false;
+        } else {
+          currentInput = currentInput === '0' ? number : currentInput + number;
+        }
+        updateDisplay();
+      }
+
+      function appendDecimal() {
+        if (calculationCompleted) {
+          currentInput = '0.';
+          previousInput = '';
+          operator = null;
+          waitingForSecondOperand = false;
+          calculationCompleted = false;
+          historyDisplay.textContent = '';
+        } else if (waitingForSecondOperand) {
+          currentInput = '0.';
+          waitingForSecondOperand = false;
+          updateDisplay();
+          return;
+        }
+        if (!currentInput.includes('.')) currentInput += '.';
+        updateDisplay();
+      }
+
+      function handleOperator(nextOperator) {
+        const inputValue = parseFloat(currentInput);
+        if (isNaN(inputValue)) return;
+
+        if (calculationCompleted) {
+          previousInput = inputValue;
+          operator = nextOperator;
+          waitingForSecondOperand = true;
+          calculationCompleted = false;
+          updateDisplay();
+          return;
+        }
+
+        if (operator && waitingForSecondOperand) {
+          operator = nextOperator;
+          updateDisplay();
+          return;
+        }
+
+        if (previousInput === '') previousInput = inputValue;
+        else if (operator) {
+          const result = calculate(previousInput, inputValue, operator);
+          if (typeof result === 'string' && result.startsWith('Error')) {
+            currentInput = result;
+            updateDisplay();
+            return;
+          }
+          currentInput = String(result);
+          previousInput = result;
+        }
+
+        waitingForSecondOperand = true;
+        operator = nextOperator;
+        updateDisplay();
+      }
+
+      function calculate(num1, num2, op) {
+        switch (op) {
+          case '+': return num1 + num2;
+          case '-': return num1 - num2;
+          case '*': return num1 * num2;
+          case '/': return num2 === 0 ? 'Error: Div by 0' : num1 / num2;
+          default: return num2;
+        }
+      }
+
+      function handleScientificFunction(func) {
+        const inputValue = parseFloat(currentInput);
+        let result;
+        let expression = '';
+
+        if (isNaN(inputValue)) {
+          currentInput = 'Error';
+          updateDisplay();
+          return;
+        }
+
+        try {
+          switch (func) {
+            case 'sqrt': expression = `√(${inputValue})`; result = inputValue < 0 ? 'Error' : Math.sqrt(inputValue); break;
+            case 'square': expression = `${inputValue}²`; result = inputValue ** 2; break;
+            case 'cube': expression = `${inputValue}³`; result = inputValue ** 3; break;
+            case 'exp': expression = `e^(${inputValue})`; result = Math.exp(inputValue); break;
+            case 'ten_power': expression = `10^(${inputValue})`; result = Math.pow(10, inputValue); break;
+            case 'pi': expression = `π`; result = Math.PI; break;
+            case 'e': expression = `e`; result = Math.E; break;
+            case 'factorial':
+              expression = `${inputValue}!`;
+              if (inputValue < 0 || !Number.isInteger(inputValue)) result = 'Error';
+              else { let fact = 1; for (let i = 2; i <= inputValue; i++) fact *= i; result = fact; }
+              break;
+            case 'percent': expression = `${inputValue}%`; result = inputValue / 100; break;
+            case 'power':
+              previousInput = inputValue;
+              operator = '^';
+              waitingForSecondOperand = true;
+              currentInput = '';
+              updateDisplay();
+              return;
+            case 'ft_to_cm': expression = `${inputValue} ft`; result = inputValue * 30.48; break;
+            case 'history': showHistory(); return;
+            case 'theme_toggle': toggleTheme(); return;
+            default: result = 'Error';
+          }
+
+          if (result !== 'Error') addCalculationToHistory(expression, String(result));
+          historyDisplay.textContent = expression;
+          currentInput = String(result);
+          previousInput = '';
+          operator = null;
+          waitingForSecondOperand = false;
+          calculationCompleted = true;
+          mainDisplay.textContent = currentInput;
+        } catch {
+          currentInput = 'Error';
+          historyDisplay.textContent = '';
+          mainDisplay.textContent = currentInput;
+        }
+      }
+
+      function handleEquals() {
+        if (operator === null || waitingForSecondOperand) return;
+        const inputValue = parseFloat(currentInput);
+        let result;
+        let expr = `${previousInput} ${operator} ${inputValue}`;
+        if (operator === '^') result = Math.pow(previousInput, inputValue);
+        else result = calculate(previousInput, inputValue, operator);
+
+        if (typeof result === 'string' && result.startsWith('Error')) {
+          currentInput = result;
+          updateDisplay();
+          return;
+        }
+        addCalculationToHistory(expr, String(result));
+        historyDisplay.textContent = `${expr} =`;
+        currentInput = String(result);
+        mainDisplay.textContent = currentInput;
+        previousInput = '';
+        operator = null;
+        waitingForSecondOperand = false;
+        calculationCompleted = true;
+      }
+
+      function showHistory() {
+        historyList.innerHTML = calculationHistory.length
+          ? [...calculationHistory].reverse().map(i => `<li>${i}</li>`).join('')
+          : '<li class="text-center text-gray-500">No history yet.</li>';
+        historyModal.classList.remove('hidden');
+      }
+
+      function clearCalculationHistory() {
+        calculationHistory = [];
+        showHistory();
+      }
+
+      function toggleTheme() {
+        body.classList.toggle('light-mode');
+        const isLight = body.classList.contains('light-mode');
+        localStorage.setItem(THEME_STORAGE_KEY, isLight ? 'light' : 'dark');
+      }
+
+      function loadTheme() {
+        const saved = localStorage.getItem(THEME_STORAGE_KEY);
+        if (saved === 'light') body.classList.add('light-mode');
+      }
+
+      buttons.forEach(btn => btn.addEventListener('click', () => {
+        const v = btn.dataset.value;
+        btn.classList.add('active');
+        setTimeout(() => btn.classList.remove('active'), 100);
+
+        if (v === 'history') showHistory();
+        else if (v === 'theme_toggle') toggleTheme();
+        else if (!isNaN(v)) appendNumber(v);
+        else if (v === '.') appendDecimal();
+        else if (v === 'C') clearAll();
+        else if (v === '=') handleEquals();
+        else if (['+', '-', '*', '/'].includes(v)) handleOperator(v);
+        else handleScientificFunction(v);
+      }));
+
+      closeHistoryModalBtn.addEventListener('click', () => historyModal.classList.add('hidden'));
+      historyModal.addEventListener('click', e => { if (e.target === historyModal) historyModal.classList.add('hidden'); });
+      clearHistoryBtn.addEventListener('click', clearCalculationHistory);
+
+      loadTheme();
+      updateDisplay();
+    });
+  </script>
+</body>
+        </html>
