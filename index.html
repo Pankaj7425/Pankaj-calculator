@@ -432,5 +432,15 @@
       updateDisplay();
     });
   </script>
+  <script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function() {
+      navigator.serviceWorker
+        .register("/service-worker.js")
+        .then(() => console.log("✅ Service Worker registered successfully"))
+        .catch((err) => console.error("❌ Service Worker registration failed:", err));
+    });
+  }
+  </script>
 </body>
         </html>
