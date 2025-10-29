@@ -2,12 +2,10 @@
   "name": "Picku Calculator",
   "short_name": "Calculator",
   "start_url": "./index.html",
-  "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
-  "description": "A simple and fast calculator web app built by Picku.",
+  "background_color": "#000000",
+  "theme_color": "#0d6efd",
+  "description": "A fast, modern, and smart calculator by Picku.",
   "icons": [
     {
       "src": "icons/icon-192.png",
